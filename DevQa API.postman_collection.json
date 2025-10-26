@@ -1,0 +1,510 @@
+{
+	"info": {
+		"_postman_id": "df8b3e74-027b-4c8c-bee4-9165ac02cef3",
+		"name": "DevQa API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "49546664",
+		"_collection_link": "https://industrialdisco-3283291.postman.co/workspace/6109718b-325c-43a6-8fa6-73ef2b64c136/collection/49546664-df8b3e74-027b-4c8c-bee4-9165ac02cef3?action=share&source=collection_link&creator=49546664"
+	},
+	"item": [
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "/products",
+					"item": [
+						{
+							"name": "/products",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+											"pm.test(\"Response is an array\", () => {",
+											"    const data = pm.response.json();",
+											"    pm.expect(data).to.be.an(\"array\");",
+											"});",
+											"pm.test(\"Each item has id, name, price, stock\", () => {",
+											"    const data = pm.response.json();",
+											"    data.forEach(item => {",
+											"        pm.expect(item).to.have.property(\"id\");",
+											"        pm.expect(item).to.have.property(\"name\");",
+											"        pm.expect(item).to.have.property(\"price\");",
+											"        pm.expect(item).to.have.property(\"stock\");",
+											"        pm.expect(item.stock).to.be.at.least(0);",
+											"    });",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/products",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"products"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "/products?name=",
+					"item": [
+						{
+							"name": "/products?name=<exact_name>",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const data = pm.response.json();",
+											"const queryName = pm.request.url.query.get(\"name\");",
+											"",
+											"// Ensure queryName is set",
+											"pm.test(\"Query name is not empty\", () => {",
+											"    pm.expect(queryName).to.not.eql(\"\");",
+											"});",
+											"",
+											"// Only run matching test if queryName exists and data returned",
+											"if (queryName && data.length > 0) {",
+											"    pm.test(\"Matching is case-sensitive\", () => {",
+											"        data.forEach(item => {",
+											"            pm.expect(item.name).to.eql(queryName);",
+											"        });",
+											"    });",
+											"}",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/products?name/Mouse",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"products"
+									],
+									"query": [
+										{
+											"key": "name/Mouse",
+											"value": null
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "/products/:id",
+					"item": [
+						{
+							"name": "/products/:id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const data = pm.response.json();",
+											"pm.test(\"Response has id, name, price, stock\", () => {",
+											"    pm.expect(data).to.have.property(\"id\");",
+											"    pm.expect(data).to.have.property(\"name\");",
+											"    pm.expect(data).to.have.property(\"price\");",
+											"    pm.expect(data).to.have.property(\"stock\");",
+											"});",
+											"if (data.isDetailed) {",
+											"    pm.test(\"Description exists when isDetailed is true\", () => {",
+											"        pm.expect(data).to.have.property(\"description\");",
+											"    });",
+											"}",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/products/{{productId}}",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"products",
+										"{{productId}}"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "/register",
+					"item": [
+						{
+							"name": "/register",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const data = pm.response.json();",
+											"",
+											"// Test for status code: 201 if new user, 409 if already exists",
+											"pm.test(\"Status is 201 or 409\", () => {",
+											"    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+											"});",
+											"",
+											"// Only test id and email if registration was successful",
+											"if (pm.response.code === 201) {",
+											"    pm.test(\"Response contains id and email\", () => {",
+											"        pm.expect(data).to.have.property(\"id\");",
+											"        pm.expect(data).to.have.property(\"email\");",
+											"    });",
+											"}",
+											"",
+											"// Always test that password is not returned",
+											"pm.test(\"Password is not returned\", () => {",
+											"    pm.expect(data).to.not.have.property(\"password\");",
+											"});",
+											"",
+											"// Optional: log a warning for duplicate email",
+											"if (pm.response.code === 409) {",
+											"    console.warn(\"Email already registered:\", data.error);",
+											"}",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"email\": \"qa_user_1@example.com\",\n  \"password\": \"StrongPassword123\"\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/register",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"register"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "/login",
+					"item": [
+						{
+							"name": "/login",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+											"const data = pm.response.json();",
+											"pm.test(\"Response contains token\", () => pm.expect(data).to.have.property(\"token\"));",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/login",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"login"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "/orders",
+					"item": [
+						{
+							"name": "/orders",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"const data = pm.response.json();",
+											"",
+											"// Test for status code: 200 or 201",
+											"pm.test(\"Status is 200 or 201\", () => {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+											"});",
+											"",
+											"// Test that the response contains order ID (handle id or orderId)",
+											"pm.test(\"Response contains orderId\", () => {",
+											"    pm.expect(data).to.have.property(\"id\"); // change from orderId to id",
+											"});",
+											"",
+											"// Test that products array exists",
+											"pm.test(\"Products array exists\", () => {",
+											"    pm.expect(data).to.have.property(\"products\");",
+											"    pm.expect(data.products).to.be.an(\"array\");",
+											"});",
+											"",
+											"// Test that totalPrice exists",
+											"pm.test(\"Total price exists\", () => {",
+											"    pm.expect(data).to.have.property(\"totalPrice\");",
+											"    pm.expect(data.totalPrice).to.be.a(\"number\");",
+											"});",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"packages": {},
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NjE0ODc2MDJ9.8cKKqD8LeL7UlgyO3sVSVfA98jnNJXsZO6VNI7hTFwA",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n  \"products\": [1, 2]\n}\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseUrl}}/orders",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"orders"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "/orders/:id",
+					"item": [
+						{
+							"name": "/orders/:id",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.environment.set(\"lastOrderId\", data.id);"
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NjE0ODc2MDJ9.8cKKqD8LeL7UlgyO3sVSVfA98jnNJXsZO6VNI7hTFwA",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseUrl}}/orders/",
+									"host": [
+										"{{baseUrl}}"
+									],
+									"path": [
+										"orders",
+										""
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"auth": {
+						"type": "bearer"
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {},
+								"exec": [
+									""
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": ""
+		},
+		{
+			"key": "productName",
+			"value": ""
+		}
+	]
+}
