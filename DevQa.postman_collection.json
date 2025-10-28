@@ -1,10 +1,10 @@
 {
 	"info": {
-		"_postman_id": "df8b3e74-027b-4c8c-bee4-9165ac02cef3",
+		"_postman_id": "b0483479-a0a5-4ebf-bd4c-847b44038ae7",
 		"name": "DevQa",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "49546664",
-		"_collection_link": "https://industrialdisco-3283291.postman.co/workspace/6109718b-325c-43a6-8fa6-73ef2b64c136/collection/49546664-df8b3e74-027b-4c8c-bee4-9165ac02cef3?action=share&source=collection_link&creator=49546664"
+		"_collection_link": "https://industrialdisco-3283291.postman.co/workspace/Salva's-Workspace~6109718b-325c-43a6-8fa6-73ef2b64c136/collection/49546664-b0483479-a0a5-4ebf-bd4c-847b44038ae7?action=share&source=collection_link&creator=49546664"
 	},
 	"item": [
 		{
@@ -205,12 +205,12 @@
 										"exec": [
 											"const data = pm.response.json();",
 											"",
-											"// Test for status code: 201 if new user, 409 if already exists",
+											"// Always allow 201 or 409 (user already exists)",
 											"pm.test(\"Status is 201 or 409\", () => {",
 											"    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
 											"});",
 											"",
-											"// Only test id and email if registration was successful",
+											"// Only test id and email if new user",
 											"if (pm.response.code === 201) {",
 											"    pm.test(\"Response contains id and email\", () => {",
 											"        pm.expect(data).to.have.property(\"id\");",
@@ -218,15 +218,19 @@
 											"    });",
 											"}",
 											"",
-											"// Always test that password is not returned",
+											"// Password should never be returned",
 											"pm.test(\"Password is not returned\", () => {",
 											"    pm.expect(data).to.not.have.property(\"password\");",
 											"});",
 											"",
-											"// Optional: log a warning for duplicate email",
+											"// Optional: log if user already exists",
 											"if (pm.response.code === 409) {",
-											"    console.warn(\"Email already registered:\", data.error);",
+											"    console.log(\"User already exists, skipping creation:\", pm.environment.get(\"test_email\"));",
 											"}",
+											"",
+											"// Save email and password to environment for login",
+											"pm.environment.set(\"login_email\", pm.environment.get(\"test_email\"));",
+											"pm.environment.set(\"login_password\", pm.environment.get(\"test_password\"));",
 											""
 										],
 										"type": "text/javascript",
@@ -236,11 +240,14 @@
 								}
 							],
 							"request": {
+								"auth": {
+									"type": "noauth"
+								},
 								"method": "POST",
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "{\n  \"email\": \"qa_user_1@example.com\",\n  \"password\": \"StrongPassword123\"\n}\n",
+									"raw": "{\n  \"email\": \"{{login_email}}\",\n  \"password\": \"{{login_password}}\"\n}\n",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -280,14 +287,35 @@
 										"packages": {},
 										"requests": {}
 									}
+								},
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
+										"packages": {},
+										"requests": {}
+									}
 								}
 							],
 							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NjE0ODc2MDJ9.8cKKqD8LeL7UlgyO3sVSVfA98jnNJXsZO6VNI7hTFwA",
+											"type": "string"
+										}
+									]
+								},
 								"method": "POST",
 								"header": [],
 								"body": {
 									"mode": "raw",
-									"raw": "",
+									"raw": "{\n  \"email\": \"{{login_email}}\",\n  \"password\": \"{{login_password}}\"\n}\n",
 									"options": {
 										"raw": {
 											"language": "json"
@@ -356,8 +384,12 @@
 								{
 									"listen": "prerequest",
 									"script": {
+										"exec": [
+											""
+										],
+										"type": "text/javascript",
 										"packages": {},
-										"type": "text/javascript"
+										"requests": {}
 									}
 								}
 							],
@@ -367,7 +399,7 @@
 									"bearer": [
 										{
 											"key": "token",
-											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NjE0ODc2MDJ9.8cKKqD8LeL7UlgyO3sVSVfA98jnNJXsZO6VNI7hTFwA",
+											"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImwiLCJpYXQiOjE3NjE2ODE2ODZ9.0gltHz79xDwmIdDBVjMZd3MjlymBZm2X-m1Z1yiwovc",
 											"type": "string"
 										}
 									]
@@ -407,7 +439,7 @@
 									"listen": "test",
 									"script": {
 										"exec": [
-											"pm.environment.set(\"lastOrderId\", data.id);"
+											"pm.environment.set(\"lastOrderId\", pm.iterationData.id);"
 										],
 										"type": "text/javascript",
 										"packages": {},
@@ -495,16 +527,6 @@
 					""
 				]
 			}
-		}
-	],
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": ""
-		},
-		{
-			"key": "productName",
-			"value": ""
 		}
 	]
 }
